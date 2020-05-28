@@ -2,10 +2,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 
-class COVID19Dataset(Dataset):
-    def __init__(self, tweet_text, labels, max_len, tokenizer, batch_size=32):
+class COVID19TweetDataset(Dataset):
+    def __init__(self, tweet_text, labels, tweet_ids, max_len, tokenizer, batch_size=32):
         self.tweet_text = tweet_text
         self.labels = labels
+        self.tweet_ids = tweet_ids
         self.max_len = max_len
         self.tokenizer = tokenizer
         self.batch_size = batch_size
@@ -16,6 +17,7 @@ class COVID19Dataset(Dataset):
     def __getitem__(self, item):
         tweet = str(self.tweet_text[item])
         label = self.labels[item]
+        tweet_id = str(self.tweet_ids[item])
 
         encoding = self.tokenizer.encode_plus(
             tweet,
@@ -31,5 +33,6 @@ class COVID19Dataset(Dataset):
             'tweet_text': tweet,
             'input_ids': encoding['input_ids'].flatten(),
             'attention_mask': encoding['attention_mask'].flatten(),
-            'labels': torch.tensor(label, dtype=torch.long)
+            'labels': torch.tensor(label, dtype=torch.long),
+            'tweet_ids': tweet_id
         }
