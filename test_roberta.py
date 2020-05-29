@@ -8,12 +8,14 @@ from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 import os
-from dataset_loader import COVID19Dataset
+from dataset_loader import COVID19TweetDataset
 from baseline_classifier import BaselineClassifierLinear
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score
+from torch.utils.tensorboard import SummaryWriter
 
 # TODO: Add tensorboard logging 
+writer = SummaryWriter()
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Using Device: {}".format(device))
@@ -28,7 +30,7 @@ tweets_data_final = tweets_data_orig[['text.clean', 'expert', 'id']]
 
 PRE_TRAINED_MODEL_NAME = 'roberta-base'
 MAX_LEN = 400
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 RANDOM_SEED = 42
 
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
@@ -76,14 +78,18 @@ def train(num_epochs):
     history = []
     best_val_acc = float('-inf')
     label_history = []
-
+    tensorboard_time_train = 0
+    tensorboard_time_val = 0
+    
     for epoch in range(num_epochs):
         # Training
         train_loss_arr = []
         train_predicted_labels = []
         train_actual_labels = []
+        train_tweet_ids = []
 
         for step, batch in enumerate(tqdm(data_loader['train'])):
+            tensorboard_time_train += 1
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['labels'].to(device)
@@ -94,8 +100,9 @@ def train(num_epochs):
             loss = criterion(outputs, labels)
             train_actual_labels += list(labels.detach().cpu().view(-1).numpy())
             train_predicted_labels += list(predictions.detach().cpu().view(-1).numpy())
-
+            train_tweet_ids += tweet_ids
             train_loss_arr.append(loss.item())
+
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
@@ -103,9 +110,12 @@ def train(num_epochs):
             optimizer.zero_grad()
             if step % 10 == 0:
                 print(f'Train Epoch = {epoch}, Step = {step}, Train Loss = {np.mean(train_loss_arr)}')
+            
+            writer.add_scalar('train_loss', np.mean(train_loss_arr), tensorboard_time_train)
 
         train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
-        train_acc = np.sum(train_actual_labels == train_predicted_labels) / len(data_loader['train'])
+        train_acc = np.sum(np.array(train_actual_labels) == np.array(train_predicted_labels)) / len(train_set)
+        writer.add_scalar('train_f1_score', train_f1_score, epoch)
 
         # Validation 
         val_loss_arr = []
@@ -114,24 +124,28 @@ def train(num_epochs):
         val_tweet_ids = []
         with torch.no_grad():
             for step, batch in enumerate(tqdm(data_loader['val'])):
+                tensorboard_time_val += 1
                 input_ids = batch['input_ids'].to(device)
                 attention_mask = batch['attention_mask'].to(device)
                 labels = batch['labels'].to(device)
-                tweet_ids = batch['tweet_ids'].to(device)
+                tweet_ids = batch['tweet_ids']
 
                 outputs = model(input_ids, attention_mask)
                 _, predictions = torch.max(outputs, dim=1)
                 loss = criterion(outputs, labels)
                 val_actual_labels += list(labels.detach().cpu().view(-1).numpy())
                 val_predicted_labels += list(predictions.detach().cpu().view(-1).numpy())
-                val_tweet_ids += list(tweet_ids.detach().cpu().view(-1).numpy())
+                val_tweet_ids += tweet_ids
 
                 val_loss_arr.append(loss.item())
                 if step % 10 == 0:
                     print(f'Val Epoch = {epoch}, Step = {step}, Val Loss = {np.mean(val_loss_arr)}')
+                
+                writer.add_scalar('val_loss', np.mean(val_loss_arr), tensorboard_time_val)
 
-            val_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
-            val_acc = np.sum(train_actual_labels == train_predicted_labels) / len(data_loader['train'])
+            val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
+            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(val_set)
+            writer.add_scalar('val_f1_score', val_f1_score, epoch)
         
         # If we get better validation accuracy, save the labels/tweet ids for error analysis
         if val_acc > best_val_acc:
