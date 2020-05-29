@@ -13,6 +13,7 @@ from baseline_classifier import BaselineClassifierLinear
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score
 from torch.utils.tensorboard import SummaryWriter
+from pathlib import Path
 
 # TODO: Add tensorboard logging 
 writer = SummaryWriter()
@@ -74,15 +75,16 @@ criterion = nn.CrossEntropyLoss().to(device)
 
 
 # Train loop
-def train(num_epochs):
+def train(num_epochs, model):
     history = []
-    best_val_acc = float('-inf')
+    best_val_f1 = float('-inf')
     label_history = []
     tensorboard_time_train = 0
     tensorboard_time_val = 0
-    
+
     for epoch in range(num_epochs):
         # Training
+        model.train()
         train_loss_arr = []
         train_predicted_labels = []
         train_actual_labels = []
@@ -118,6 +120,7 @@ def train(num_epochs):
         writer.add_scalar('train_f1_score', train_f1_score, epoch)
 
         # Validation 
+        model.eval()
         val_loss_arr = []
         val_predicted_labels = []
         val_actual_labels = []
@@ -147,11 +150,12 @@ def train(num_epochs):
             val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(val_set)
             writer.add_scalar('val_f1_score', val_f1_score, epoch)
         
-        # If we get better validation accuracy, save the labels/tweet ids for error analysis
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
+        # If we get better validation f1, save the labels/tweet ids for error analysis
+        if val_f1_score > best_val_f1:
+            best_val_f1 = val_f1_score
             np.save(os.path.join(DATA_DIR, 'label_history.npy'), list(zip(val_actual_labels, 
                                                             val_predicted_labels, val_tweet_ids)))
+            save(model, epoch, optimizer, np.mean(val_loss_arr), model_prefix='roberta_linear_baseline_model')
         
         print(f'Epoch {epoch}')
         print('-' * 20)
@@ -162,6 +166,14 @@ def train(num_epochs):
         history.append([np.mean(train_loss_arr), np.mean(val_loss_arr), train_f1_score, val_f1_score])
         np.save(os.path.join(DATA_DIR, 'history.npy'), history)
 
+
+def save(model, epoch, optimizer, loss, model_prefix='model_', root='.model'):
+    path = Path(root) / (model_prefix + '.ep%d' % epoch)
+    if not path.parent.exists():
+        path.parent.mkdir()
+
+    torch.save({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'loss': loss}, path)
+
 # Call Train/Val Loop
 print("Begin Training!")
-train(NUM_EPOCHS)
+train(NUM_EPOCHS, model)
