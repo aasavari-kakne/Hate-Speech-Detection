@@ -31,7 +31,7 @@ tweets_data_final = tweets_data_orig[['text.clean', 'expert', 'id']]
 
 PRE_TRAINED_MODEL_NAME = 'roberta-base'
 MAX_LEN = 400
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 RANDOM_SEED = 42
 
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
@@ -71,7 +71,9 @@ optimizer = AdamW(model.parameters(), lr=2e-5, correct_bias=False)
 scheduler = get_linear_schedule_with_warmup(optimizer,
                                             num_warmup_steps=0,
                                             num_training_steps=len(data_loader['train']) * NUM_EPOCHS)
-criterion = nn.CrossEntropyLoss().to(device)
+
+class_weights = torch.FloatTensor([1.0, 2.088]).cuda()
+criterion = nn.CrossEntropyLoss(weight=class_weights).to(device)
 
 
 # Train loop
@@ -155,7 +157,7 @@ def train(num_epochs, model):
             best_val_f1 = val_f1_score
             np.save(os.path.join(DATA_DIR, 'label_history.npy'), list(zip(val_actual_labels, 
                                                             val_predicted_labels, val_tweet_ids)))
-            save(model, epoch, optimizer, np.mean(val_loss_arr), model_prefix='roberta_linear_baseline_model')
+            save(model, epoch, optimizer, np.mean(val_loss_arr), model_prefix='roberta_linear_baseline_model_weighted_loss')
         
         print(f'Epoch {epoch}')
         print('-' * 20)
@@ -167,7 +169,7 @@ def train(num_epochs, model):
         np.save(os.path.join(DATA_DIR, 'history.npy'), history)
 
 
-def save(model, epoch, optimizer, loss, model_prefix='model_', root='.model'):
+def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/groups/kpohl/cs224u_models/.model'):
     path = Path(root) / (model_prefix + '.ep%d' % epoch)
     if not path.parent.exists():
         path.parent.mkdir()
