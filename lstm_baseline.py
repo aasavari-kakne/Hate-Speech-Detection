@@ -172,8 +172,8 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
         avg_epoch_loss_val = []
         predicted_proba = []
         dev_targets = []
-        with torch.no_grad():
 
+        with torch.no_grad():
             for val_batch in val_data_loader:
 
                 val_data_batch = val_batch[0]
