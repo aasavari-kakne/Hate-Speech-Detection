@@ -10,7 +10,7 @@ class CustomLSTMLayer(nn.Module):
     def __init__(
             self,
             input_size=200, hidden_size=200,
-            num_layers=2, batch_size=256,
+            num_layers=1, batch_size=256,
             bidirectional=False, inner_dropout=0.25,
             outer_droput=[0.25, 0.25]
     ):
@@ -31,7 +31,7 @@ class CustomLSTMLayer(nn.Module):
 
     def forward(self, input):
         _, (ht, _) = self.lstm(input)
-        return ht[-1, :]
+        return torch.squeeze(ht, 0)
 
     def init_hidden_size(self):
         cell_state = torch.zeros(
@@ -75,15 +75,9 @@ class CustomFullyConnected(nn.Module):
     def __init__(self, hidden_size=200):
         super(CustomFullyConnected, self).__init__()
 
-        self.fc1 = nn.Linear(hidden_size, 20)
-        self.fc2 = nn.Linear(20, 10)
-        self.fc3 = nn.Linear(10, 2)
+        self.fc1 = nn.Linear(hidden_size, 2)
 
     def forward(self, input):
         output = self.fc1(input)
-        ouput = F.relu(output)
-        output = self.fc2(output)
-        ouput = F.relu(output)
-        output = self.fc3(output)
-        ouput = F.relu(output)
+        output = F.relu(output)
         return output

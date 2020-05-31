@@ -81,7 +81,7 @@ def data_preprocessing():
 def model_(global_word_dict, word_vectors):
 
     # model vars
-    LSTM_HIDDEN_UNITS = 25
+    LSTM_HIDDEN_UNITS = 100
     VOCAB_SIZE = len(global_word_dict)
     EMBEDDING_SIZE = 50
 
