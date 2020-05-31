@@ -42,7 +42,7 @@ def pad_sentences(batch):
     padded_sentences = torch.LongTensor(
         list(
             map(
-                lambda x: pd.np.pad(x[0].numpy(), (0, max_batch_length-x[0].size(0)), 'constant', constant_values=0),
+                lambda x: np.pad(x[0].numpy(), (0, max_batch_length-x[0].size(0)), 'constant', constant_values=0),
                 batch
             )
         )
@@ -105,7 +105,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
     LEARNING_RATE = 0.01
-    EPOCHS = 1
+    EPOCHS = 10
 
     #training
     history = []
@@ -199,12 +199,12 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             )
         )
 
-        print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, pd.np.mean(avg_epoch_loss),  pd.np.mean(avg_epoch_loss_val),
+        print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
                                                  accuracy_score(dev_targets.long().numpy(), predicted_labels),
                                                  f1_score(dev_targets.long().numpy(), predicted_labels)))
 
         # Save history
-        history.append([pd.np.mean(avg_epoch_loss), pd.np.mean(avg_epoch_loss_val), accuracy_score(dev_targets.long().numpy(), predicted_labels), f1_score(dev_targets.long().numpy(), predicted_labels)])
+        history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), accuracy_score(dev_targets.long().numpy(), predicted_labels), f1_score(dev_targets.long().numpy(), predicted_labels)])
         np.save(os.path.join(DATA_DIR, 'history_lstm.npy'), history)
 
 def main():
