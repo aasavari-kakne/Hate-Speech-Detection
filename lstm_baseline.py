@@ -104,7 +104,7 @@ def model_(global_word_dict, word_vectors):
 def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
-    LEARNING_RATE = 0.01
+    LEARNING_RATE = 2e-5
     EPOCHS = 10
 
     #training
@@ -127,8 +127,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)  # Set up the optimizer
-    ce_loss = nn.BCEWithLogitsLoss().to(device) # Set up the loss
-
+    ce_loss = nn.CrossEntropyLoss().to(device)
 
     for epoch in range(EPOCHS):
         # Set the progress bar up
@@ -147,8 +146,9 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
         for index, batch in progress_bar:
 
             data_batch = batch[0]
-            data_labels = torch.zeros(batch[0].size(0), 2)
-            data_labels[range(batch[0].size(0)), batch[1].long()] = 1
+            data_labels = batch[1]
+            # data_labels = torch.zeros(batch[0].size(0), 2)
+            # data_labels[range(batch[0].size(0)), batch[1].long()] = 1
             # Throw it on the gpu
             data_batch = data_batch.to(device)
             data_labels = data_labels.to(device)
@@ -158,6 +158,8 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
             # predict batch
             predicted = F.softmax(model(data_batch), dim=1)
+            _, predicted_labels = torch.max(predicted, dim=1)
+
             # Calculate the loss
             loss = ce_loss(predicted, data_labels)
             avg_epoch_loss.append(loss.item())
@@ -170,43 +172,51 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
         model.eval()
         avg_epoch_loss_val = []
+        val_predicted_labels = []
+        val_actual_labels = []
         predicted_proba = []
         dev_targets = []
+        val_len = 0
 
         with torch.no_grad():
             for val_batch in val_data_loader:
 
-                val_data_batch = val_batch[0]
-                val_data_batch = val_data_batch.to(device)
-                val_data_labels = torch.zeros(val_batch[0].size(0), 2).to(device)
-                val_data_labels[range(val_batch[0].size(0)), val_batch[1].long()] = 1
+                val_data_batch = val_batch[0].to(device)
+                val_data_labels = val_batch[1].to(device)
 
                 predicted = F.softmax(model(val_data_batch), dim=1)
+                _, predicted_labels = torch.max(predicted, dim=1)
                 loss_ = ce_loss(predicted, val_data_labels)
                 avg_epoch_loss_val.append(loss_.item())
+
+                val_actual_labels += list(val_data_labels.detach().cpu().view(-1).numpy())
+                val_predicted_labels += list(predicted_labels.detach().cpu().view(-1).numpy())
 
                 predicted_proba.append(predicted[:, 1])
                 dev_targets.append(val_batch[1])
 
+                val_len+=len(val_batch[0])
 
-            predicted_proba = torch.cat(predicted_proba, dim=0)
-            print('predicted proba: ', predicted_proba)
-            dev_targets = torch.cat(dev_targets)
-            predicted_labels = list(
-                map(
-                    lambda x: 1 if x > 0.5 else 0,
-                    predicted_proba
-                        .cpu()
-                        .float()
-                        .detach()
-                        .numpy()
-                )
-            )
-            print('predicted labels: ', predicted_labels)
+
+            # predicted_proba = torch.cat(predicted_proba, dim=0)
+            # print('predicted proba: ', predicted_proba)
+            # dev_targets = torch.cat(dev_targets)
+            # predicted_labels = list(
+            #     map(
+            #         lambda x: 1 if x > 0.5 else 0,
+            #         predicted_proba
+            #             .cpu()
+            #             .float()
+            #             .detach()
+            #             .numpy()
+            #     )
+            # )
+            # print('predicted labels: ', predicted_labels)
+            val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
+            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
-                                                 accuracy_score(dev_targets.long().numpy(), predicted_labels),
-                                                 f1_score(dev_targets.long().numpy(), predicted_labels)))
+                                                                                                 val_f1_score, val_acc))
 
         # Save history
         history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), accuracy_score(dev_targets.long().numpy(), predicted_labels), f1_score(dev_targets.long().numpy(), predicted_labels)])
