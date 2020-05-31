@@ -11,6 +11,8 @@ from lstm_classifier import CustomLSTMLayer, CustomEmbeddingLayer, CustomFullyCo
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, f1_score
 from dataset_loader_lstm import SentenceDataLoader
+import numpy as np
+import os
 
 #args
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,6 +108,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
     EPOCHS = 1
 
     #training
+    history = []
     train_dataset = SentenceDataLoader(torch_X, torch_Y)
     train_data_loader = data.DataLoader(
         train_dataset,
@@ -141,7 +144,6 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
         model.train()
 
         print('training starts')
-
         for index, batch in progress_bar:
 
             data_batch = batch[0]
@@ -167,14 +169,20 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             progress_bar.set_postfix(avg_loss=avg_epoch_loss[-1])
 
         model.eval()
+        avg_epoch_loss_val = []
         predicted_proba = []
         dev_targets = []
 
         for val_batch in val_data_loader:
             val_data_batch = val_batch[0]
             val_data_batch = val_data_batch.cuda()
+            val_data_labels = torch.zeros(val_batch[0].size(0), 2)
+            val_data_labels[range(val_batch[0].size(0)), val_batch[1].long()] = 1
 
             predicted = F.softmax(model(val_data_batch), dim=1)
+            loss_ = ce_loss(predicted, val_data_labels)
+            avg_epoch_loss_val.append(loss_.item())
+
             predicted_proba.append(predicted[:, 1])
             dev_targets.append(val_batch[1])
 
@@ -191,10 +199,13 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             )
         )
 
-        print('Epoch: %d, Train Loss: %0.4f, Val Acc: %0.4f, Dev F1:  %0.4f' % (epoch+1, pd.np.mean(avg_epoch_loss),
+        print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, pd.np.mean(avg_epoch_loss),  pd.np.mean(avg_epoch_loss_val),
                                                  accuracy_score(dev_targets.long().numpy(), predicted_labels),
                                                  f1_score(dev_targets.long().numpy(), predicted_labels)))
 
+        # Save history
+        history.append([pd.np.mean(avg_epoch_loss), pd.np.mean(avg_epoch_loss_val), accuracy_score(dev_targets.long().numpy(), predicted_labels), f1_score(dev_targets.long().numpy(), predicted_labels)])
+        np.save(os.path.join(DATA_DIR, 'history_lstm.npy'), history)
 
 def main():
 
