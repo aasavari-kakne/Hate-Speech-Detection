@@ -217,12 +217,14 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             # print('predicted labels: ', predicted_labels)
             val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
             val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
+            print('val_actual_labels: ', val_actual_labels)
+            print('val_predicted_labels: ', val_predicted_labels)
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
                                                                                                  val_f1_score, val_acc))
 
         # Save history
-        history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), accuracy_score(dev_targets.long().numpy(), predicted_labels), f1_score(dev_targets.long().numpy(), predicted_labels)])
+        history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), val_f1_score, val_acc])
         np.save(os.path.join(DATA_DIR, 'history_lstm.npy'), history)
 
 def main():
