@@ -16,6 +16,7 @@ import os
 
 #args
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using Device: {}".format(device))
 DATA_DIR = 'data/'
 DATA_DIR_GLOVE = 'data/glove.twitter.27B.50d_w2v.txt'
 DATASET_PATH = 'data/tweets_dataset.tsv'
@@ -127,7 +128,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)  # Set up the optimizer
-    ce_loss = nn.BCEWithLogitsLoss()  # Set up the loss
+    ce_loss = nn.BCEWithLogitsLoss().to(device) # Set up the loss
 
 
     for epoch in range(EPOCHS):
@@ -175,8 +176,8 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
         for val_batch in val_data_loader:
             val_data_batch = val_batch[0]
-            val_data_batch = val_data_batch.cuda()
-            val_data_labels = torch.zeros(val_batch[0].size(0), 2)
+            val_data_batch = val_data_batch.to(device)
+            val_data_labels = torch.zeros(val_batch[0].size(0), 2).to(device)
             val_data_labels[range(val_batch[0].size(0)), val_batch[1].long()] = 1
 
             predicted = F.softmax(model(val_data_batch), dim=1)
