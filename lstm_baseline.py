@@ -151,6 +151,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             # data_labels[range(batch[0].size(0)), batch[1].long()] = 1
             # Throw it on the gpu
             data_batch = data_batch.to(device)
+            data_labels = data_labels.type(torch.long)
             data_labels = data_labels.to(device)
 
             # Zero out the optimizer
@@ -182,7 +183,9 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             for val_batch in val_data_loader:
 
                 val_data_batch = val_batch[0].to(device)
-                val_data_labels = val_batch[1].to(device)
+                val_data_labels = val_batch[1].type(torch.long)
+                val_data_labels = val_data_labels.to(device)
+
 
                 predicted = F.softmax(model(val_data_batch), dim=1)
                 _, predicted_labels = torch.max(predicted, dim=1)
