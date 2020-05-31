@@ -9,11 +9,12 @@ from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 import os
 from dataset_loader import COVID19TweetDataset
-from baseline_classifier import BaselineClassifierLinear
+from classifiers import BaselineClassifierLinear
 from tqdm import tqdm
 from sklearn.metrics import f1_score, precision_score, recall_score
 from torch.utils.tensorboard import SummaryWriter
 from pathlib import Path
+import torch.nn.functional as F
 
 # TODO: Add tensorboard logging 
 writer = SummaryWriter()
@@ -100,6 +101,7 @@ def train(num_epochs, model):
             tweet_ids = batch['tweet_ids']
 
             outputs = model(input_ids, attention_mask)
+            outputs_softmax = F.softmax(outputs, dim=1)
             _, predictions = torch.max(outputs, dim=1)
             loss = criterion(outputs, labels)
             train_actual_labels += list(labels.detach().cpu().view(-1).numpy())
@@ -127,6 +129,9 @@ def train(num_epochs, model):
         val_predicted_labels = []
         val_actual_labels = []
         val_tweet_ids = []
+        prob_neg_label = []
+        prob_pos_label = []
+
         with torch.no_grad():
             for step, batch in enumerate(tqdm(data_loader['val'])):
                 tensorboard_time_val += 1
@@ -140,6 +145,8 @@ def train(num_epochs, model):
                 loss = criterion(outputs, labels)
                 val_actual_labels += list(labels.detach().cpu().view(-1).numpy())
                 val_predicted_labels += list(predictions.detach().cpu().view(-1).numpy())
+                prob_neg_label += list(outputs_softmax[:, 0].detach().cpu().view(-1).numpy())
+                prob_pos_label += list(outputs_softmax[:, 1].detach().cpu().view(-1).numpy())
                 val_tweet_ids += tweet_ids
 
                 val_loss_arr.append(loss.item())
@@ -155,8 +162,8 @@ def train(num_epochs, model):
         # If we get better validation f1, save the labels/tweet ids for error analysis
         if val_f1_score > best_val_f1:
             best_val_f1 = val_f1_score
-            np.save(os.path.join(DATA_DIR, 'label_history.npy'), list(zip(val_actual_labels, 
-                                                            val_predicted_labels, val_tweet_ids)))
+            np.save(os.path.join(DATA_DIR, 'label_history_weighted.npy'), list(zip(val_actual_labels, 
+                                                            val_predicted_labels, prob_neg_label, prob_pos_label, val_tweet_ids)))
             save(model, epoch, optimizer, np.mean(val_loss_arr), model_prefix='roberta_linear_baseline_model_weighted_loss')
         
         print(f'Epoch {epoch}')
@@ -166,7 +173,7 @@ def train(num_epochs, model):
 
         # Save history
         history.append([np.mean(train_loss_arr), np.mean(val_loss_arr), train_f1_score, val_f1_score])
-        np.save(os.path.join(DATA_DIR, 'history.npy'), history)
+        np.save(os.path.join(DATA_DIR, 'history_weighted.npy'), history)
 
 
 def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/groups/kpohl/cs224u_models/.model'):
