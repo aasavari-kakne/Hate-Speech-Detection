@@ -162,42 +162,44 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             loss = ce_loss(predicted, data_labels)
             avg_epoch_loss.append(loss.item())
             loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 
             # Update the weights
             optimizer.step()
-
             progress_bar.set_postfix(avg_loss=avg_epoch_loss[-1])
 
         model.eval()
         avg_epoch_loss_val = []
         predicted_proba = []
         dev_targets = []
+        with torch.no_grad():
 
-        for val_batch in val_data_loader:
-            val_data_batch = val_batch[0]
-            val_data_batch = val_data_batch.to(device)
-            val_data_labels = torch.zeros(val_batch[0].size(0), 2).to(device)
-            val_data_labels[range(val_batch[0].size(0)), val_batch[1].long()] = 1
+            for val_batch in val_data_loader:
 
-            predicted = F.softmax(model(val_data_batch), dim=1)
-            loss_ = ce_loss(predicted, val_data_labels)
-            avg_epoch_loss_val.append(loss_.item())
+                val_data_batch = val_batch[0]
+                val_data_batch = val_data_batch.to(device)
+                val_data_labels = torch.zeros(val_batch[0].size(0), 2).to(device)
+                val_data_labels[range(val_batch[0].size(0)), val_batch[1].long()] = 1
 
-            predicted_proba.append(predicted[:, 1])
-            dev_targets.append(val_batch[1])
+                predicted = F.softmax(model(val_data_batch), dim=1)
+                loss_ = ce_loss(predicted, val_data_labels)
+                avg_epoch_loss_val.append(loss_.item())
 
-        predicted_proba = torch.cat(predicted_proba, dim=0)
-        dev_targets = torch.cat(dev_targets)
-        predicted_labels = list(
-            map(
-                lambda x: 1 if x > 0.5 else 0,
-                predicted_proba
-                    .cpu()
-                    .float()
-                    .detach()
-                    .numpy()
+                predicted_proba.append(predicted[:, 1])
+                dev_targets.append(val_batch[1])
+
+            predicted_proba = torch.cat(predicted_proba, dim=0)
+            dev_targets = torch.cat(dev_targets)
+            predicted_labels = list(
+                map(
+                    lambda x: 1 if x > 0.5 else 0,
+                    predicted_proba
+                        .cpu()
+                        .float()
+                        .detach()
+                        .numpy()
+                )
             )
-        )
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
                                                  accuracy_score(dev_targets.long().numpy(), predicted_labels),
