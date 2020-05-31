@@ -73,9 +73,9 @@ def data_preprocessing():
     global_word_dict = {key.lower(): index for index, key in
                         enumerate(word_vectors.vocab.keys(), start=2)}  # Make a dictionary with [word]->index
     torch_X = index_sentences(train_set['text.clean'].values, global_word_dict, tokenizer)
-    torch_Y = torch.tensor(train_set['expert'].to_numpy().astype('float64'))
+    torch_Y = torch.tensor(train_set['expert'].to_numpy().astype('int64'), dtype=torch.long)
     torch_X_dev = index_sentences(val_set['text.clean'].values, global_word_dict, tokenizer)
-    torch_Y_dev = torch.tensor(val_set['expert'].to_numpy().astype('float64'))
+    torch_Y_dev = torch.tensor(val_set['expert'].to_numpy().astype('int64'), dtype=torch.long)
     return torch_X, torch_Y, torch_X_dev, torch_Y_dev, global_word_dict, word_vectors
 
 def model_(global_word_dict, word_vectors):
