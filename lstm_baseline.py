@@ -188,7 +188,9 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
                 predicted_proba.append(predicted[:, 1])
                 dev_targets.append(val_batch[1])
 
+
             predicted_proba = torch.cat(predicted_proba, dim=0)
+            print('predicted proba: ', predicted_proba)
             dev_targets = torch.cat(dev_targets)
             predicted_labels = list(
                 map(
@@ -200,6 +202,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
                         .numpy()
                 )
             )
+            print('predicted labels: ', predicted_labels)
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
                                                  accuracy_score(dev_targets.long().numpy(), predicted_labels),
