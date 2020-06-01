@@ -9,7 +9,7 @@ Test split = 10% i.e. 2k examples
 Val split = 10% i.e. 2k examples
 
 
-# Architecture 
+### Architecture 
 Dropout probability = 0.1
 
 
