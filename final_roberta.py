@@ -111,7 +111,7 @@ def train(num_epochs, model):
             writer.add_scalar('train_loss', np.mean(train_loss_arr), tensorboard_time_train)
 
         train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
-        train_acc = np.sum(np.array(train_actual_labels) == np.array(train_predicted_labels)) / len(train_set)
+        train_acc = np.sum(np.array(train_actual_labels) == np.array(train_predicted_labels)) / len(tweets_train)
         writer.add_scalar('train_f1_score', train_f1_score, epoch)
 
         # Validation 
@@ -142,7 +142,7 @@ def train(num_epochs, model):
                 writer.add_scalar('val_loss', np.mean(val_loss_arr), tensorboard_time_val)
 
             val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
-            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(val_set)
+            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(tweets_val)
             writer.add_scalar('val_f1_score', val_f1_score, epoch)
         
         # If we get better validation f1, save the labels/tweet ids for error analysis
