@@ -105,12 +105,14 @@ def model_(global_word_dict, word_vectors):
 def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
-    LEARNING_RATE = 2e-5
+    LEARNING_RATE = 1e-5
     EPOCHS = 20
 
     #training
     best_val_f1 = float('-inf')
+    corr_best_train_f1 = float('-inf') #best train F1 corresponding to best val F1 score
     history = []
+
     train_dataset = SentenceDataLoader(torch_X, torch_Y)
     train_data_loader = data.DataLoader(
         train_dataset,
@@ -134,12 +136,16 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     for epoch in range(EPOCHS):
         # Set the progress bar up
+
+        train_predicted_labels = []
+        train_actual_labels = []
+
         progress_bar = tqdm(
             enumerate(train_data_loader),
             total=len(train_data_loader),
         )
 
-        # throw the model on the gpu
+        # put the model on the gpu
         model = model.to(device)
 
         avg_epoch_loss = []
@@ -150,8 +156,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
             data_batch = batch[0]
             data_labels = batch[1]
-            # data_labels = torch.zeros(batch[0].size(0), 2)
-            # data_labels[range(batch[0].size(0)), batch[1].long()] = 1
+
             # Throw it on the gpu
             data_batch = data_batch.to(device)
             data_labels = data_labels.type(torch.long)
@@ -163,6 +168,9 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             # predict batch
             predicted = F.softmax(model(data_batch), dim=1)
             _, predicted_labels = torch.max(predicted, dim=1)
+
+            train_actual_labels += list(data_labels.detach().cpu().view(-1).numpy())
+            train_predicted_labels += list(predicted_labels.detach().cpu().view(-1).numpy())
 
             # Calculate the loss
             loss = ce_loss(predicted, data_labels)
@@ -203,28 +211,16 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
                 val_len+=len(val_batch[0])
 
+        train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
+        val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
+        val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
 
-            # predicted_proba = torch.cat(predicted_proba, dim=0)
-            # print('predicted proba: ', predicted_proba)
-            # dev_targets = torch.cat(dev_targets)
-            # predicted_labels = list(
-            #     map(
-            #         lambda x: 1 if x > 0.5 else 0,
-            #         predicted_proba
-            #             .cpu()
-            #             .float()
-            #             .detach()
-            #             .numpy()
-            #     )
-            # )
-            # print('predicted labels: ', predicted_labels)
-            val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
-            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
-            if val_f1_score > best_val_f1:
-                print('best val changed')
-                best_val_f1 = val_f1_score
+        if val_f1_score > best_val_f1:
+            print('best val changed')
+            best_val_f1 = val_f1_score
+            corr_best_train_f1 = train_f1_score
 
-        print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
+        print('Epoch: %d, Train Loss: %0.4f, Train F1 score: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss), train_f1_score,  np.mean(avg_epoch_loss_val),
                                                                                                val_acc, val_f1_score))
         print('Best Val F1 score is: ', best_val_f1)
 
@@ -232,11 +228,14 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
         history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), val_f1_score, val_acc])
         np.save(os.path.join(DATA_DIR, 'history_lstm.npy'), history)
 
+    print('Best Val F1 score: %0.4f Corresponding best Train F1 score: %0.4f' % (best_val_f1,  corr_best_train_f1))
+
 def main():
 
     torch_X, torch_Y, torch_X_dev, torch_Y_dev, global_word_dict, word_vectors = data_preprocessing()
     model = model_(global_word_dict, word_vectors)
     train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev)
+
 
 if __name__ == "__main__":
     main()
