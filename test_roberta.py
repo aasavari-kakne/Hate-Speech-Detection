@@ -31,7 +31,7 @@ tweets_data_final = tweets_data_orig[['text.clean', 'expert', 'id']]
 
 PRE_TRAINED_MODEL_NAME = 'roberta-base'
 MAX_LEN = 400
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 RANDOM_SEED = 42
 
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
@@ -169,7 +169,7 @@ def train(num_epochs, model):
         np.save(os.path.join(DATA_DIR, 'history.npy'), history)
 
 
-def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/groups/kpohl/cs224u_models/.model'):
+def save(model, epoch, optimizer, loss, model_prefix='model_', root='.model'):
     path = Path(root) / (model_prefix + '.ep%d' % epoch)
     if not path.parent.exists():
         path.parent.mkdir()
