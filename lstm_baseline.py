@@ -221,6 +221,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
             val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
             if val_f1_score > best_val_f1:
+                print('best val changed')
                 best_val_f1 = val_f1_score
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
