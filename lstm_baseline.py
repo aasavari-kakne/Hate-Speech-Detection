@@ -106,7 +106,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
     LEARNING_RATE = 1e-5
-    EPOCHS = 20
+    EPOCHS = 40
 
     #training
     best_val_f1 = float('-inf')
