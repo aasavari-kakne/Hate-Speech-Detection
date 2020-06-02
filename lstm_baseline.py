@@ -109,6 +109,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
     EPOCHS = 20
 
     #training
+    best_val_f1 = float('-inf')
     history = []
     train_dataset = SentenceDataLoader(torch_X, torch_Y)
     train_data_loader = data.DataLoader(
@@ -219,11 +220,12 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             # print('predicted labels: ', predicted_labels)
             val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
             val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
-            print('val_actual_labels: ', val_actual_labels)
-            print('val_predicted_labels: ', val_predicted_labels)
+            if val_f1_score > best_val_f1:
+                best_val_f1 = val_f1_score
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
                                                                                                val_f1_score, val_acc))
+        print('Best Val F1 score is: ', best_val_f1)
 
         # Save history
         history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), val_f1_score, val_acc])
