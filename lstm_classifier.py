@@ -3,9 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# this is the just the layer that does LSTM
-# LSTM is awesome and does magic and turns
-# numbers into more numbers
 class CustomLSTMLayer(nn.Module):
     def __init__(
             self,
@@ -25,8 +22,7 @@ class CustomLSTMLayer(nn.Module):
         self.lstm = nn.LSTM(
             self.input_size, self.hidden_size,
             self.num_layers, batch_first=True,
-            bidirectional=self.bidirectional,
-            dropout=inner_dropout
+            bidirectional=self.bidirectional
         )
 
     def forward(self, input):
