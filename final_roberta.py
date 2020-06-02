@@ -163,15 +163,14 @@ def train(num_epochs, model):
         print("Best F-1 score on validation dataset is {}".format(best_val_f1))
 
 
-<<<<<<< HEAD
 def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/ubuntu/CS224u_Final_Project/.model'):
-    path = Path(root) / (model_prefix + '.ep%d' % epoch)
-=======
-def save(model, epoch, optimizer, loss, model_prefix='model_', root='/content/drive/My Drive/CS224u_Final_Project/.model'):
+
     path = Path(root) / (model_prefix + '.ep')
->>>>>>> 0f028560e8f7a62ca17fe2f755ad5e71bf8de672
-    if not path.parent.exists():
-        path.parent.mkdir()
+
+# def save(model, epoch, optimizer, loss, model_prefix='model_', root='/content/drive/My Drive/CS224u_Final_Project/.model'):
+#     path = Path(root) / (model_prefix + '.ep')
+#     if not path.parent.exists():
+#         path.parent.mkdir()
 
     torch.save({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'loss': loss}, path)
 
