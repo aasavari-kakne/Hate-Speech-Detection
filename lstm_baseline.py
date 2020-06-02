@@ -105,14 +105,13 @@ def model_(global_word_dict, word_vectors):
 def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
-    LEARNING_RATE = 1e-5
+    LEARNING_RATE = 2e-5
     EPOCHS = 40
 
     #training
     best_val_f1 = float('-inf')
     corr_best_train_f1 = float('-inf') #best train F1 corresponding to best val F1 score
     history = []
-
     train_dataset = SentenceDataLoader(torch_X, torch_Y)
     train_data_loader = data.DataLoader(
         train_dataset,
@@ -136,6 +135,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     for epoch in range(EPOCHS):
         # Set the progress bar up
+
 
         train_predicted_labels = []
         train_actual_labels = []
@@ -197,7 +197,6 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
                 val_data_labels = val_batch[1].type(torch.long)
                 val_data_labels = val_data_labels.to(device)
 
-
                 predicted = F.softmax(model(val_data_batch), dim=1)
                 _, predicted_labels = torch.max(predicted, dim=1)
                 loss_ = ce_loss(predicted, val_data_labels)
@@ -211,9 +210,9 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
                 val_len+=len(val_batch[0])
 
-        train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
-        val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
-        val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
+            train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
+            val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
+            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / val_len
 
         if val_f1_score > best_val_f1:
             print('best val changed')
