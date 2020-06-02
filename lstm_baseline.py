@@ -56,6 +56,7 @@ def data_preprocessing():
     word_vectors = KeyedVectors.load_word2vec_format(DATA_DIR_GLOVE, binary=False)  # load the glove vectors
     tweets_data_orig = pd.read_csv(DATASET_PATH, sep='\t')
     tweets_data_orig.loc[tweets_data_orig['expert'] == 'none_of_the_above', 'expert'] = 0
+    tweets_data_orig.loc[tweets_data_orig['expert'] == 'discussion_of_eastasian_prejudice', 'expert'] = 0
     tweets_data_orig.loc[tweets_data_orig['expert'] != 0, 'expert'] = 1
     tweets_data_final = tweets_data_orig[['text.clean', 'expert', 'id']]
 
@@ -105,7 +106,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
     #hyper params
     LEARNING_RATE = 2e-5
-    EPOCHS = 10
+    EPOCHS = 20
 
     #training
     history = []
@@ -127,7 +128,8 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
 
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)  # Set up the optimizer
-    ce_loss = nn.CrossEntropyLoss().to(device)
+    class_weights = torch.FloatTensor([1.0, 2.663]).cuda()
+    ce_loss = nn.CrossEntropyLoss(weight=class_weights).to(device)
 
     for epoch in range(EPOCHS):
         # Set the progress bar up
@@ -221,7 +223,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
             print('val_predicted_labels: ', val_predicted_labels)
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
-                                                                                                 val_f1_score, val_acc))
+                                                                                               val_f1_score, val_acc))
 
         # Save history
         history.append([np.mean(avg_epoch_loss), np.mean(avg_epoch_loss_val), val_f1_score, val_acc])
