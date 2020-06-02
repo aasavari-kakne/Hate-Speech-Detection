@@ -225,7 +225,7 @@ def train(model, torch_X, torch_Y, torch_X_dev, torch_Y_dev):
                 best_val_f1 = val_f1_score
 
         print('Epoch: %d, Train Loss: %0.4f, Val Loss: %0.4f, Val Acc: %0.4f, Val F1:  %0.4f' % (epoch+1, np.mean(avg_epoch_loss),  np.mean(avg_epoch_loss_val),
-                                                                                               val_f1_score, val_acc))
+                                                                                               val_acc, val_f1_score))
         print('Best Val F1 score is: ', best_val_f1)
 
         # Save history
