@@ -10,7 +10,6 @@ class FinalClassifier(nn.Module):
         self.linear = nn.Linear(200, num_classes)
         self.dropout = nn.Dropout(0.1)
         self.softmax = nn.Softmax()
-        
 
     def forward(self, input_ids, attention_mask):
         _, _, out_all_layers = self.model(input_ids=input_ids, attention_mask=attention_mask) 

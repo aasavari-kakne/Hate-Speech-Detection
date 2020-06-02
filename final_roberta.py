@@ -66,7 +66,7 @@ scheduler = get_linear_schedule_with_warmup(optimizer,
                                             num_warmup_steps=0,
                                             num_training_steps=len(data_loader['train']) * NUM_EPOCHS)
 
-class_weights = torch.FloatTensor([1.0, 2.088]).cuda()
+class_weights = torch.FloatTensor([1.0, 2.663]).cuda()
 criterion = nn.CrossEntropyLoss(weight=class_weights).to(device)
 
 # Train loop
@@ -111,7 +111,7 @@ def train(num_epochs, model):
             writer.add_scalar('train_loss', np.mean(train_loss_arr), tensorboard_time_train)
 
         train_f1_score = f1_score(np.array(train_actual_labels), np.array(train_predicted_labels))
-        train_acc = np.sum(np.array(train_actual_labels) == np.array(train_predicted_labels)) / len(train_set)
+        train_acc = np.sum(np.array(train_actual_labels) == np.array(train_predicted_labels)) / len(tweets_train)
         writer.add_scalar('train_f1_score', train_f1_score, epoch)
 
         # Validation 
@@ -142,7 +142,7 @@ def train(num_epochs, model):
                 writer.add_scalar('val_loss', np.mean(val_loss_arr), tensorboard_time_val)
 
             val_f1_score = f1_score(np.array(val_actual_labels), np.array(val_predicted_labels))
-            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(val_set)
+            val_acc = np.sum(np.array(val_actual_labels) == np.array(val_predicted_labels)) / len(tweets_val)
             writer.add_scalar('val_f1_score', val_f1_score, epoch)
         
         # If we get better validation f1, save the labels/tweet ids for error analysis
@@ -163,7 +163,7 @@ def train(num_epochs, model):
         print("Best F-1 score on validation dataset is {}".format(best_val_f1))
 
 
-def save(model, epoch, optimizer, loss, model_prefix='model_', root='/content/drive/My Drive/CS224u_Final_Project/.model'):
+def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/ubuntu/CS224u_Final_Project/.model'):
     path = Path(root) / (model_prefix + '.ep%d' % epoch)
     if not path.parent.exists():
         path.parent.mkdir()
