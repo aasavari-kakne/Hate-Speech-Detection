@@ -166,13 +166,17 @@ def train(num_epochs, model):
 def save(model, epoch, optimizer, loss, model_prefix='model_', root='/home/ubuntu/CS224u_Final_Project/.model'):
 
     path = Path(root) / (model_prefix + '.ep')
+    if not path.parent.exists():
+        path.parent.mkdir()
+
+    torch.save({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'loss': loss}, path)
+
 
 # def save(model, epoch, optimizer, loss, model_prefix='model_', root='/content/drive/My Drive/CS224u_Final_Project/.model'):
 #     path = Path(root) / (model_prefix + '.ep')
 #     if not path.parent.exists():
 #         path.parent.mkdir()
 
-    torch.save({'epoch': epoch, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'loss': loss}, path)
 
 # Call Train/Val Loop
 print("Begin Training!")
