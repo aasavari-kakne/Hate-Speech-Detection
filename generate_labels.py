@@ -35,7 +35,7 @@ unlabelled_set = unlabelled_set[['processed_txt','id_str']]
 
 def create_data_loader(data_set, tokenizer, max_len, batch_size):
     temp_data_set = COVID19TweetDataset_unlabel(data_set['processed_txt'].to_numpy(),
-                                        data_set['id'].to_numpy(), max_len, tokenizer)
+                                        data_set['id_str'].to_numpy(), max_len, tokenizer)
 
     return DataLoader(temp_data_set, batch_size=batch_size, drop_last=True)
 
