@@ -90,10 +90,6 @@ def forward(model):
             val_tweet_ids += list(tweet_ids)
             val_tweet_text += list(tweet_text)
 
-            print('val tweet text: ', val_tweet_text)
-            print('val label: ', val_predicted_labels)
-
-            exit()
 
     #write the soft labels to a file
     print('Tweet text length: ', len(val_tweet_text))
