@@ -26,6 +26,7 @@ MAX_LEN = 200
 BATCH_SIZE = 16
 RANDOM_SEED = 42
 model_save_path = os.path.join(DATA_DIR, 'roberta_lstm_model_ea_weighted.ep1')
+label_save_path = os.path.join(DATA_DIR, 'soft_labels.txt')
 
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
 unlabelled_dataset = os.path.join(DATA_DIR, 'processed_tweets_31.csv')
@@ -95,9 +96,9 @@ def forward(model):
     print('Tweet text length: ', len(val_tweet_text))
     print('Tweet label length: ', len(val_predicted_labels))
 
-    with open(DATA_DIR+'soft_labels.txt', 'w') as fout:
-        fout.write('tweet_text'+'\t'+'predicted_label')
+    with open(label_save_path, 'w') as fout:
+        fout.write('tweet_text'+'\t'+'predicted_label'+'\n')
         for i in range(0, len(val_predicted_labels)):
-            fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i]))
+            fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i])+'\n')
 
 forward(model)
