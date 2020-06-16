@@ -98,6 +98,6 @@ def forward(model):
     with open(DATA_DIR+'soft_labels.txt', 'w') as fout:
         fout.write('tweet_text'+'\t'+'predicted_label')
         for i in range(0, len(val_predicted_labels)):
-            fout.write(val_tweet_text[i]+'\t'+val_predicted_labels[i])
+            fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i]))
 
 forward(model)
