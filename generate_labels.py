@@ -90,14 +90,18 @@ def forward(model):
             val_tweet_ids += list(tweet_ids)
             val_tweet_text += list(tweet_text)
 
+            print('val tweet text: ', val_tweet_text)
+            print('val label: ', val_predicted_labels)
+
+            exit()
 
     #write the soft labels to a file
-    print('Tweet text length: ', len(tweet_text))
+    print('Tweet text length: ', len(val_tweet_text))
     print('Tweet label length: ', len(val_predicted_labels))
 
     with open(DATA_DIR+'soft_labels.txt', 'w') as fout:
         fout.write('tweet_text'+'\t'+'predicted_label')
         for i in range(0, len(val_predicted_labels)):
-            fout.write(tweet_text[i]+'\t'+val_predicted_labels[i])
+            fout.write(val_tweet_text[i]+'\t'+val_predicted_labels[i])
 
 forward(model)
