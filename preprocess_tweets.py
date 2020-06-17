@@ -9,11 +9,11 @@ import random
 import re
 
 DATA_DIR = '/home/ubuntu/CS224u_Final_Project/data'
-output_path = os.path.join(DATA_DIR, 'clean_unlabeled_tweets')
+output_path = os.path.join(DATA_DIR, 'clean_unlabeled_tweets.csv')
 input_path = os.path.join(DATA_DIR,'corona_tweets_31_hydrated-002.json')
 
 # read data 
-indices = list(np.arange(100000, 200000))
+indices = list(np.arange(400000, 500000))
 print("Reading json file")
 with open(input_path, encoding='utf-8') as json_file:
 	data = json_file.readlines()
@@ -60,5 +60,7 @@ for index, row in tqdm(tweets_df.iterrows()):
 		print("processed {} tweets".format(index+1))
 
 columns_to_select = ['processed_txt', 'id_str']
-tweets_df.to_csv(output_path, columns=columns_to_select, mode='a', index=True)
+tweets_df.to_csv(output_path, header=False, columns=columns_to_select, mode='a', index=False)
 
+processed = pd.read_csv(output_path)
+print("total tweets processed {}".format(processed.shape))
