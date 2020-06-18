@@ -23,13 +23,15 @@ def clean_tweet(line):
 	tokens = [dict_replace.get(word.strip(string.punctuation.replace('#', '')).lower(), word) for word in line.split()]
 	# remove all other hashtags and user names
 	for token in tokens:
-		if token[0] == '#':
+		if token[0] == '#' and token[1:].islower():
 			clean_tokens.append('#HASHTAG')
+		elif token[0] == '#' and token[1:].isupper():
+			clean_tokens.append(token[1:])
 		else:
 			clean_tokens.append(token)
 	return " ".join(clean_tokens)
 
-start_index = 500000
+start_index = 0
 end_index  = 1400000
 batch_size  = 100000
 
