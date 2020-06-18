@@ -26,10 +26,10 @@ MAX_LEN = 200
 BATCH_SIZE = 16
 RANDOM_SEED = 42
 model_save_path = os.path.join(DATA_DIR, 'roberta_lstm_model_ea_weighted.ep1')
-label_save_path = os.path.join(DATA_DIR, 'soft_labels.txt')
+label_save_path = os.path.join(DATA_DIR, 'soft_labels_14_mil.txt')
 
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
-unlabelled_dataset = os.path.join(DATA_DIR, 'processed_tweets_31.csv')
+unlabelled_dataset = os.path.join(DATA_DIR, 'clean_unlabeled_tweets.csv')
 
 unlabelled_set = pd.read_csv(unlabelled_dataset, sep=',')
 unlabelled_set = unlabelled_set[['processed_txt','id_str']]
@@ -72,8 +72,8 @@ def forward(model):
     val_predicted_labels = []
     val_tweet_ids = []
     val_tweet_text = []
-    prob_neg_label = []
-    prob_pos_label = []
+    # prob_neg_label = []
+    # prob_pos_label = []
 
     with torch.no_grad():
         for step, batch in enumerate(tqdm(data_loader['unlabel'])):
@@ -86,8 +86,8 @@ def forward(model):
             _, predictions = torch.max(outputs, dim=1)
             outputs_softmax = F.softmax(outputs, dim=1)
             val_predicted_labels += list(predictions.detach().cpu().view(-1).numpy())
-            prob_neg_label += list(outputs_softmax[:, 0].detach().cpu().view(-1).numpy())
-            prob_pos_label += list(outputs_softmax[:, 1].detach().cpu().view(-1).numpy())
+            # prob_neg_label += list(outputs_softmax[:, 0].detach().cpu().view(-1).numpy())
+            # prob_pos_label += list(outputs_softmax[:, 1].detach().cpu().view(-1).numpy())
             val_tweet_ids += list(tweet_ids)
             val_tweet_text += list(tweet_text)
 
@@ -95,10 +95,9 @@ def forward(model):
     #write the soft labels to a file
     print('Tweet text length: ', len(val_tweet_text))
     print('Tweet label length: ', len(val_predicted_labels))
-
     with open(label_save_path, 'w') as fout:
         fout.write('tweet_text'+'\t'+'predicted_label'+'\n')
         for i in range(0, len(val_predicted_labels)):
-            fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i])+'\n')
+            fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i])+'\t'+str(val_tweet_ids[i])+'\n')
 
 forward(model)
