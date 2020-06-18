@@ -96,7 +96,7 @@ def forward(model):
     print('Tweet text length: ', len(val_tweet_text))
     print('Tweet label length: ', len(val_predicted_labels))
     with open(label_save_path, 'w') as fout:
-        fout.write('tweet_text'+'\t'+'predicted_label'+'\t'+'tweet id'+'\n')
+        fout.write('tweet_text'+'\t'+'predicted_label'+'\t'+'tweet_id'+'\n')
         for i in range(0, len(val_predicted_labels)):
             fout.write(val_tweet_text[i]+'\t'+str(val_predicted_labels[i])+'\t'+str(val_tweet_ids[i])+'\n')
 
