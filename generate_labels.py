@@ -35,8 +35,8 @@ unlabelled_set = pd.read_csv(unlabelled_dataset, sep=',', header = None)
 # unlabelled_set = unlabelled_set[['processed_txt','id_str']]
 
 def create_data_loader(data_set, tokenizer, max_len, batch_size):
-    temp_data_set = COVID19TweetDataset_unlabel(data_set['processed_txt'].to_numpy(),
-                                        data_set['id_str'].to_numpy(), max_len, tokenizer)
+    temp_data_set = COVID19TweetDataset_unlabel(data_set[0].to_numpy(),
+                                        data_set[1].to_numpy(), max_len, tokenizer)
 
     return DataLoader(temp_data_set, batch_size=batch_size, drop_last=True)
 
