@@ -31,8 +31,8 @@ label_save_path = os.path.join(DATA_DIR, 'soft_labels_14_mil.txt')
 tokenizer = RobertaTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
 unlabelled_dataset = os.path.join(DATA_DIR, 'clean_unlabeled_tweets.csv')
 
-unlabelled_set = pd.read_csv(unlabelled_dataset, sep=',')
-unlabelled_set = unlabelled_set[['processed_txt','id_str']]
+unlabelled_set = pd.read_csv(unlabelled_dataset, sep=',', header = None)
+# unlabelled_set = unlabelled_set[['processed_txt','id_str']]
 
 def create_data_loader(data_set, tokenizer, max_len, batch_size):
     temp_data_set = COVID19TweetDataset_unlabel(data_set['processed_txt'].to_numpy(),
