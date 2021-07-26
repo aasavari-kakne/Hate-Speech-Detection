@@ -1,4 +1,4 @@
-# CS224u_Final_Project
+# Hate Speech Detection using Transfer Learning with RoBERTa
 
 ## Design choice 
 
